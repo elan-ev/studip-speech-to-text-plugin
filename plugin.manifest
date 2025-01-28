@@ -1,0 +1,7 @@
+pluginname=SpeechToTextPlugin
+pluginclassname=SpeechToTextPlugin
+description="Sprache automatisch in Text verwandeln"
+origin=elan-ev
+version=1.0.0
+studipMinVersion=6.0.alpha
+studipMaxVersion=6.1.99

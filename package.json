@@ -1,0 +1,48 @@
+{
+    "name": "speech-to-text",
+    "private": true,
+    "version": "1.0.0",
+    "type": "module",
+    "files": [
+        "dist"
+    ],
+    "main": "./dist/speech-to-text-lib.umd.cjs",
+    "module": "./dist/speech-to-text-lib.js",
+    "exports": {
+        ".": {
+            "import": "./dist/speech-to-text-lib.js",
+            "require": "./dist/speech-to-text-lib.umd.cjs"
+        }
+    },
+    "scripts": {
+        "build": "vite build",
+        "dev": "vite",
+        "dev-build": "vite build --mode development",
+        "lint": "eslint",
+        "test": "jest",
+        "translate": "bash ./makeTranslations.sh speech-to-text",
+        "watch": "vite build --watch --mode development"
+    },
+    "dependencies": {
+        "vue": "^3.5.17"
+    },
+    "devDependencies": {
+        "@elan-ev/studip-named-routes": "1.0.1",
+        "@eslint/js": "^9.31.0",
+        "@inertiajs/vue3": "^2.0.17",
+        "@vitejs/plugin-vue": "^6.0.0",
+        "autoprefixer": "^10.4.21",
+        "eslint": "^9.31.0",
+        "eslint-plugin-vue": "^10.3.0",
+        "globals": "^16.3.0",
+        "jest": "^30.0.4",
+        "prettier": "^3.6.2",
+        "radix-vue": "^1.9.17",
+        "rollup-plugin-visualizer": "^6.0.3",
+        "sass-embedded": "^1.89.2",
+        "vite": "^7.0.5",
+        "vue-loader": "^17.4.2",
+        "vue-resizable": "^2.1.7",
+        "vue3-gettext": "^4.0.0-alpha.8"
+    }
+}

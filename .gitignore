@@ -1,0 +1,5 @@
+/node_modules/
+/vendor/
+/dist/
+/stats.html
+/.php-cs-fixer.php
