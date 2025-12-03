@@ -1,0 +1,34 @@
+#+title: Stud.IP-SpeechToTextPlugin
+
+* Beschreibung
+
+Das *SpeechToText*-Plugin bietet im Arbeitsplatz eine Umgebung an, in der Audio- bzw. Video-Dateien hochgeladen werden, die dann über einen konfigurierbaren Backend-Server in Text umgewandelt wird.
+
+* Installation
+
+Das Plugin bietet mit dem Interface =SpeechToTextPlugin\Contracts\Services\PredictionServiceInterface= die Möglichkeit, unterschiedlichste Transkriptions-Backends zu nutzen.
+
+Der aktuelle Default ist, über [[https://replicate.com][Replicate]] das Model https://replicate.com/vaibhavs10/incredibly-fast-whisper zu verwenden. Dazu muss aber die Environment-Variable `REPLICATE_TOKEN` gesetzt werden, da sonst kein Zugriff auf Replicate erfolgen kann. Das Token erhält man unter https://replicate.com/account/api-tokens
+
+Beispiel für den Eintrag in Stud.IPs `.env`-Datei:
+
+#+begin_src
+REPLICATE_TOKEN="r8_..."
+#+end_src
+
+* Systemanforderungen
+
+- Stud.IP ab Version 6.0
+
+* Lizenz
+
+[[./agplv3.png]]
+
+Dieses Projekt unterliegt der GNU Affero General Public License v3.0 oder höher (AGPL-3.0-oder-höher).
+
+Weitere Informationen finden Sie in der Datei [[file:LICENSE]] oder unter [[https://www.gnu.org/licenses/agpl-3.0.html]].
+
+# Local Variables:
+# ispell-local-dictionary: "deutsch"
+# fill-column: 2000
+# End:
