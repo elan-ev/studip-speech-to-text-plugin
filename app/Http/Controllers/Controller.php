@@ -9,9 +9,6 @@ use Psr\Http\Message\UriInterface;
 use SpeechToTextPlugin\Contracts\Services\RedirectServiceInterface;
 use Studip\Inertia\Controller as InertiaController;
 
-/**
- * @SuppressWarnings(StaticAccess)
- */
 class Controller extends InertiaController
 {
     #[Inject]
@@ -36,9 +33,6 @@ class Controller extends InertiaController
         return $this->redirectService->redirectToNamedRoute($routeName, $data, $queryParams, $status);
     }
 
-    /**
-     * @SuppressWarnings(PHPMD.Superglobals)
-     */
     public function view(string $view, array $data = []): string
     {
         $factory = new Factory(__DIR__ . '/../../../resources/views');

@@ -23,7 +23,7 @@ trait InteractsWithContentTypes
         }
     }
 
-    protected function detectPrefetchOrPrerender(ServerRequestInterface $request): string
+    protected function detectPrefetchOrPrerender(ServerRequestInterface $request): bool
     {
         if ($request->hasHeader('X-Moz') && 'prefetch' === strtolower($request->getHeader('X-Moz')[0])) {
             return true;

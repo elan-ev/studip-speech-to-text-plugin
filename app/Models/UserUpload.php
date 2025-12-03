@@ -22,6 +22,13 @@ class UserUpload extends \SimpleORMap
         parent::configure($config);
     }
 
+    /**
+     * Creates a new UserUpload record for the given file.
+     *
+     * @param \FileType $file The file for which the UserUpload record is being created.
+     *
+     * @return bool Returns true if the UserUpload record is successfully created, false otherwise.
+     */
     public static function createForFile(\FileType $file): bool
     {
         return self::create([
@@ -30,11 +37,28 @@ class UserUpload extends \SimpleORMap
         ]) !== null;
     }
 
+    /**
+     * Checks if the user's upload quota is within the allowed limit.
+     *
+     * @param \User $user The user for whom the quota check is being performed.
+     * @param int $size The size of the file that will be uploaded.
+     *
+     * @return bool Returns true if the user's current usage plus the size of the file to be uploaded
+     *              does not exceed the quota limit, false otherwise.
+     */
     public static function isWithinQuota(\User $user, int $size): bool
     {
         return $size + self::getUsage($user) <= self::QUOTA;
     }
 
+    /**
+     * Retrieves the total file size uploaded by the user in the current month.
+     *
+     * @param \User $user The user for whom the upload usage is being calculated.
+     *
+     * @return int The total file size uploaded by the user in the current month, in bytes.
+     *             If no files have been uploaded by the user in the current month, returns 0.
+     */
     public static function getUsage(\User $user): int
     {
         $since = strtotime(date("Y-m-01 00:00:00"));

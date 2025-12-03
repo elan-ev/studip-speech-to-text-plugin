@@ -4,10 +4,6 @@ use Slim\Interfaces\RouteCollectorProxyInterface;
 use SpeechToTextPlugin\Routing\Router;
 use SpeechToTextPlugin\Models\Job;
 
-/**
- * @SuppressWarnings(PSR1.Classes.ClassDeclaration.MissingNamespace)
- * @SuppressWarnings(StaticAccess)
- */
 class SpeechToTextPlugin extends StudIPPlugin implements SystemPlugin, PrivacyPlugin
 {
     use TranslatablePluginTrait;
@@ -38,9 +34,6 @@ class SpeechToTextPlugin extends StudIPPlugin implements SystemPlugin, PrivacyPl
         }
     }
 
-    /**
-     * @SuppressWarnings(UnusedFormalParameter)
-     */
     public function registerSlimRoutes(RouteCollectorProxyInterface $app, string $unconsumedPath): void
     {
         $this->router->registerRoutes($app, $unconsumedPath);

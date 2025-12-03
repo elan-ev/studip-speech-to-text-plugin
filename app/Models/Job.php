@@ -2,23 +2,43 @@
 
 namespace SpeechToTextPlugin\Models;
 
+use Psr\Log\LoggerInterface;
 use SpeechToTextPlugin\Traits\Policable;
-use SpeechToTextPlugin\Exceptions\ApiCommunicationException;
 use SpeechToTextPlugin\Exceptions\FileOperationException;
-use SpeechToTextPlugin\Exceptions\InputValidationException;
-use SpeechToTextPlugin\Exceptions\WebhookException;
 use SpeechToTextPlugin\Exceptions\BadRequestException;
 use SpeechToTextPlugin\Exceptions\InternalServerErrorException;
 use SpeechToTextPlugin\Files\PublicFolder;
 use SpeechToTextPlugin\Models\UserUpload;
+use SpeechToTextPlugin\Traits\LogsErrors;
 
 /**
  * Job.php
  * model class for table speech_to_text_jobs.
+ *
+ * @property string $id primary key
+ * @property mixed $user_id
+ * @property mixed $user
+ * @property mixed $input_file_ref_id
+ * @property mixed $input_file_ref
+ * @property mixed $input_file_ref_name
+ * @property mixed $input_file_ref_size
+ * @property mixed $prediction
+ * @property mixed $status
+ * @property mixed $mkdate.
+ * @property mixed $chdate.
  */
 class Job extends \SimpleORMap
 {
+    use LogsErrors;
     use Policable;
+
+    protected LoggerInterface $logger;
+
+    public function __construct($id = null)
+    {
+        parent::__construct($id);
+        $this->logger = app()->get(LoggerInterface::class);
+    }
 
     protected static function configure($config = [])
     {
@@ -39,16 +59,46 @@ class Job extends \SimpleORMap
         parent::configure($config);
     }
 
+    /**
+     * Retrieves all jobs associated with a given user.
+     *
+     * @param \User $user The user for whom to retrieve jobs.
+     *
+     * @return array An array of Job objects associated with the given user,
+     *               sorted by creation date in ascending order.
+     *
+     * @throws \Exception If an error occurs while executing the database query.
+     */
     public static function findByUser(\User $user): array
     {
         return self::findBySql('user_id = ? ORDER BY mkdate', [$user->id]);
     }
 
+    /**
+     * Retrieves the latest job for a given user.
+     *
+     * @param \User $user The user for whom to retrieve the latest job.
+     *
+     * @return Job|null The latest job for the given user, or null if no job exists.
+     *
+     * @throws \Exception If an error occurs while executing the database query.
+     */
     public static function latest(\User $user): ?Job
     {
         return self::findOneBySql('user_id = ? ORDER BY chdate DESC', [$user->id]);
     }
 
+    /**
+     * Writes the prediction to a temporary file and adds it to the job's public folder.
+     *
+     * @param string $extension The file extension for the prediction file.
+     * @param string $prediction The prediction text to be written to the file.
+     *
+     * @return \FileType The FileType object representing the added prediction file.
+     *
+     * @throws FileOperationException If there's an error creating the temporary file,
+     *                                writing to it, or adding the file to the folder.
+     */
     public function writePrediction(string $extension, string $prediction): \FileType
     {
         $tmpName = null;
@@ -56,7 +106,7 @@ class Job extends \SimpleORMap
         try {
             $tmpName = $this->writeTemporaryFile($prediction);
 
-            $name = $this->input_file_ref_name.'.'.$extension;
+            $name = $this->input_file_ref_name . '.' . $extension;
             $result = \StandardFile::create(
                 [
                     'name' => $name,
@@ -68,7 +118,7 @@ class Job extends \SimpleORMap
             );
 
             if (is_array($result)) {
-                throw new FileOperationException('Could not create file: '.($result['error'] ?? 'Unknown error'));
+                throw new FileOperationException('Could not create file: ' . ($result['error'] ?? 'Unknown error'));
             }
 
             $folder = PublicFolder::findOrCreateTopFolder($this);
@@ -129,7 +179,7 @@ class Job extends \SimpleORMap
             if (file_exists($tempFilePath)) {
                 unlink($tempFilePath);
             }
-            throw new FileOperationException('Error writing to temporary file: '.$e->getMessage(), 0, $e);
+            throw new FileOperationException('Error writing to temporary file: ' . $e->getMessage(), 0, $e);
         }
     }
 
@@ -165,13 +215,22 @@ class Job extends \SimpleORMap
         return $addedFile;
     }
 
+    /**
+     * Retrieves all output files associated with this job, excluding the input file.
+     *
+     * @return array An array of FileRef objects representing the output files.
+     *
+     * @throws InternalServerErrorException If the public folder cannot be found or created.
+     */
     public function getOutputFileRefs(): array
     {
+        // Find or create the public folder associated with this job
         $folder = PublicFolder::findOrCreateTopFolder($this);
         if (!$folder) {
             throw new InternalServerErrorException('Could not find or create public folder.');
         }
 
+        // Retrieve all files in the folder, filter out the input file, and return their FileRef objects
         return array_values(
             array_filter(
                 array_map(

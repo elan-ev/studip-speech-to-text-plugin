@@ -151,8 +151,6 @@ class JobsStore extends JobsController
      * @param UploadedFileInterface $uploadedFile The uploaded file
      *
      * @return string The path to the moved file
-     *
-     * @SuppressWarnings(Superglobals)
      */
     protected function moveUploadedFile(UploadedFileInterface $uploadedFile): string
     {
@@ -172,12 +170,14 @@ class JobsStore extends JobsController
      * @param UploadedFileInterface $uploadedFile The uploaded file
      * @param \User $user The user who uploaded the file
      *
-     * @return \StandardFile The created standard file
+     * @return \StandardFile The created standard file or an array of errors.
+     * @throws InternalServerErrorException If there's an error creating the file from the uploaded file
      */
     protected function createStandardFileFromUpload(UploadedFileInterface $uploadedFile, \User $user): \StandardFile
     {
         $tmpFilename = $this->moveUploadedFile($uploadedFile);
-        return \StandardFile::create([
+
+        $file = \StandardFile::create([
             'name' => $uploadedFile->getClientFilename(),
             'type' => $uploadedFile->getClientMediaType(),
             'size' => $uploadedFile->getSize(),
@@ -186,5 +186,11 @@ class JobsStore extends JobsController
             'description' => '',
             'content_terms_of_use_id' => 0,
         ]);
+
+        if (is_array($file)) {
+            throw new InternalServerErrorException();
+        }
+
+        return $file;
     }
 }

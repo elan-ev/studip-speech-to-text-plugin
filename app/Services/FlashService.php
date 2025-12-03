@@ -2,7 +2,9 @@
 
 namespace SpeechToTextPlugin\Services;
 
-final class Flash implements FlashInterface
+use SpeechToTextPlugin\Contracts\Services\FlashServiceInterface;
+
+final class Flash implements FlashServiceInterface
 {
     private array|\ArrayAccess $storage;
 

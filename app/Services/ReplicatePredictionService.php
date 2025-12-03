@@ -27,7 +27,7 @@ class ReplicatePredictionService implements PredictionServiceInterface
     /**
      * The model identifier for the WhisperX speech-to-text model on Replicate.
      */
-    private const string WHISPER_MODEL_ID = 'vaibhavs10/incredibly-fast-whisper:3ab86df6c8f54c11309d4d1f930ac292bad43ace52d10c80d87eb258b3c9f79c';
+    private const WHISPER_MODEL_ID = 'vaibhavs10/incredibly-fast-whisper:3ab86df6c8f54c11309d4d1f930ac292bad43ace52d10c80d87eb258b3c9f79c';
 
     /**
      * JSON encoding options used throughout the class.
@@ -63,19 +63,19 @@ class ReplicatePredictionService implements PredictionServiceInterface
             $this->validateJobInput($job);
             $audioUrl = $this->getAudioUrl($job);
             $webhook = (string) $this->getWebhookUri($job, $webhookUri);
-            $prediction = $this->ncreatePrediction($audioUrl, $webhook, $language);
+            $prediction = $this->createPrediction($audioUrl, $webhook, $language);
 
             $job->prediction = json_encode($prediction->json(), self::JSON_OPTIONS);
             $job->status = 'started';
             $job->store();
-        } catch (InputValidationException|ApiCommunicationException|FileOperationException $e) {
+        } catch (InputValidationException | ApiCommunicationException | FileOperationException $e) {
             // Handle specific exceptions
             $this->handleJobError($job, $e);
             throw $e;
         } catch (\Exception $e) {
             // Catch any other unexpected exceptions
             $this->handleJobError($job, $e);
-            throw new ApiCommunicationException('Unexpected error during prediction start: '.$e->getMessage(), 0, $e);
+            throw new ApiCommunicationException('Unexpected error during prediction start: ' . $e->getMessage(), 0, $e);
         }
     }
 
@@ -112,7 +112,7 @@ class ReplicatePredictionService implements PredictionServiceInterface
             $this->updateJobFromWebhook($job, $prediction);
 
             return $this->jsonResponse($response, ['status' => 'success']);
-        } catch (WebhookException|InputValidationException|FileOperationException $e) {
+        } catch (WebhookException | InputValidationException | FileOperationException $e) {
             $this->logError('%s: %s', $e::class, $e->getMessage());
 
             return $this->jsonResponse($response, [
@@ -187,7 +187,7 @@ class ReplicatePredictionService implements PredictionServiceInterface
                     ]
                 );
         } catch (\Exception $e) {
-            throw new ApiCommunicationException('Failed to create prediction with Replicate API: '.$e->getMessage(), 0, $e);
+            throw new ApiCommunicationException('Failed to create prediction with Replicate API: ' . $e->getMessage(), 0, $e);
         }
     }
 
@@ -226,18 +226,18 @@ class ReplicatePredictionService implements PredictionServiceInterface
             $validator = v::key('from', v::notEmpty())->key('job_id', v::intVal()->positive());
             $validator->assert($queryParams);
         } catch (\Exception $e) {
-            throw new WebhookException('Invalid webhook parameters: '.$e->getMessage());
+            throw new WebhookException('Invalid webhook parameters: ' . $e->getMessage());
         }
 
         if ('replicate' !== $queryParams['from']) {
-            throw new WebhookException('Unknown webhook source: '.$queryParams['from']);
+            throw new WebhookException('Unknown webhook source: ' . $queryParams['from']);
         }
 
         $jobId = (int) $queryParams['job_id'];
         $job = Job::find($jobId);
 
         if (!$job) {
-            throw new WebhookException('Could not find job: '.$jobId);
+            throw new WebhookException('Could not find job: ' . $jobId);
         }
 
         return $job;
@@ -264,7 +264,7 @@ class ReplicatePredictionService implements PredictionServiceInterface
         // Validate that status is one of the expected values
         $validStatuses = ['starting', 'processing', 'succeeded', 'failed', 'canceled'];
         if (!in_array($prediction['status'], $validStatuses)) {
-            throw new WebhookException('Invalid prediction status: '.$prediction['status']);
+            throw new WebhookException('Invalid prediction status: ' . $prediction['status']);
         }
 
         return $prediction;

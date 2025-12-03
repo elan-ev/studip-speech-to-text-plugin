@@ -6,7 +6,6 @@ use DI\Attribute\Inject;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use SpeechToTextPlugin\Contracts\Services\PredictionServiceInterface;
-use SpeechToTextPlugin\Traits\LogsErrors;
 
 /**
  * @SuppressWarnings(StaticAccess)
@@ -14,8 +13,6 @@ use SpeechToTextPlugin\Traits\LogsErrors;
  */
 class JobsWebhook extends JobsController
 {
-    use LogsErrors;
-
     #[Inject]
     protected PredictionServiceInterface $predictionService;
 

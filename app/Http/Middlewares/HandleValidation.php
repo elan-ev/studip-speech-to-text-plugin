@@ -37,7 +37,7 @@ class HandleValidation implements MiddlewareInterface
             Factory::setDefaultInstance(
                 (new Factory())
                     ->withTranslator($this->translate(...))
-                    ->withParameterStringifier(new readonly class(new KeepOriginalStringName()) implements ParameterStringifier {
+                    ->withParameterStringifier(new readonly class (new KeepOriginalStringName()) implements ParameterStringifier {
                         public function __construct(private ParameterStringifier $stringifier)
                         {
                         }
@@ -68,7 +68,7 @@ class HandleValidation implements MiddlewareInterface
 
         $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         if (JSON_ERROR_NONE !== json_last_error()) {
-            throw new RuntimeException(json_last_error_msg(), json_last_error());
+            throw new \RuntimeException(json_last_error_msg(), json_last_error());
         }
         $response->getBody()->write($json);
 
