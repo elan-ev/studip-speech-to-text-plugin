@@ -38,8 +38,8 @@ class RegisterServiceProviders implements MiddlewareInterface
 
         $this->container->set(
             PredictionServiceInterface::class,
-            // new ReplicatePredictionService($token, $this->logger),
-            new WhisperxApiPredictionService($whisperxApiUrl, $this->logger),
+            new ReplicatePredictionService($token, $this->logger),
+            // new WhisperxApiPredictionService($whisperxApiUrl, $this->logger),
         );
 
         return $handler->handle($request);
