@@ -8,7 +8,12 @@ Das *SpeechToText*-Plugin bietet im Arbeitsplatz eine Umgebung an, in der Audio-
 
 Das Plugin bietet mit dem Interface =SpeechToTextPlugin\Contracts\Services\PredictionServiceInterface= die Möglichkeit, unterschiedlichste Transkriptions-Backends zu nutzen.
 
-Der aktuelle Default ist, über [[https://replicate.com][Replicate]] das Model https://replicate.com/vaibhavs10/incredibly-fast-whisper zu verwenden. Dazu muss aber die Environment-Variable `REPLICATE_TOKEN` gesetzt werden, da sonst kein Zugriff auf Replicate erfolgen kann. Das Token erhält man unter https://replicate.com/account/api-tokens
+Aktuell stehen zwei Adapter zur Verfügung:
+
+** [[https://replicate.com][Replicate]]
+
+Ist die Umgebungsvariable `REPLICATE_TOKEN` gesetzt, wird über [[https://replicate.com][Replicate]] das Model https://replicate.com/vaibhavs10/incredibly-fast-whisper verwendet.
+Das Token erhält man unter https://replicate.com/account/api-tokens
 
 Beispiel für den Eintrag in Stud.IPs `.env`-Datei:
 
@@ -16,9 +21,19 @@ Beispiel für den Eintrag in Stud.IPs `.env`-Datei:
 REPLICATE_TOKEN="r8_..."
 #+end_src
 
+** [[https://github.com/elan-ev/whisperx-api][whisperx-api]]
+Ist die Umgebungsvariable `WHISPERX_API_URL` gesetzt, wird über eine Installation von [[https://github.com/elan-ev/whisperx-api][whisperx-api]] verwendet.
+
+Beispiel für den Eintrag in Stud.IPs `.env`-Datei:
+
+#+begin_src
+WHISPERX_API_URL="http://172.17.0.1:11300"
+#+end_src
+
 * Systemanforderungen
 
 - Stud.IP ab Version 6.0
+- PHP v8.3+
 
 * Lizenz
 
