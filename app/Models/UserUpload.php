@@ -8,8 +8,6 @@ namespace SpeechToTextPlugin\Models;
  */
 class UserUpload extends \SimpleORMap
 {
-    public const QUOTA = 10 * 1024 * 1024 * 1024;
-
     protected static function configure($config = [])
     {
         $config['db_table'] = 'speech_to_text_user_uploads';
@@ -38,6 +36,20 @@ class UserUpload extends \SimpleORMap
     }
 
     /**
+     * Returns the configured whisper usage quota of a user.
+     *
+     * @param \User $user The user for whom the quota is returned.
+     *
+     * @return int Returns the quota of the given user in bytes.
+     */
+    public static function getQuota(\User $user): int
+    {
+        $quota = $_ENV['SPEECH_TO_TEXT_QUOTA'] ?? 10 * 1024 * 1024 * 1024;
+
+        return (int) $quota;
+    }
+
+    /**
      * Checks if the user's upload quota is within the allowed limit.
      *
      * @param \User $user The user for whom the quota check is being performed.
@@ -48,7 +60,7 @@ class UserUpload extends \SimpleORMap
      */
     public static function isWithinQuota(\User $user, int $size): bool
     {
-        return $size + self::getUsage($user) <= self::QUOTA;
+        return $size + self::getUsage($user) <= self::getQuota($user);
     }
 
     /**

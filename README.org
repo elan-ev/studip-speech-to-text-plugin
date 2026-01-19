@@ -6,11 +6,12 @@ Das *SpeechToText*-Plugin bietet im Arbeitsplatz eine Umgebung an, in der Audio-
 
 * Installation
 
+** PredictionService
 Das Plugin bietet mit dem Interface =SpeechToTextPlugin\Contracts\Services\PredictionServiceInterface= die Möglichkeit, unterschiedlichste Transkriptions-Backends zu nutzen.
 
 Aktuell stehen zwei Adapter zur Verfügung:
 
-** [[https://replicate.com][Replicate]]
+*** [[https://replicate.com][Replicate]]
 
 Ist die Umgebungsvariable `REPLICATE_TOKEN` gesetzt, wird über [[https://replicate.com][Replicate]] das Model https://replicate.com/vaibhavs10/incredibly-fast-whisper verwendet.
 Das Token erhält man unter https://replicate.com/account/api-tokens
@@ -21,13 +22,23 @@ Beispiel für den Eintrag in Stud.IPs `.env`-Datei:
 REPLICATE_TOKEN="r8_..."
 #+end_src
 
-** [[https://github.com/elan-ev/whisperx-api][whisperx-api]]
+*** [[https://github.com/elan-ev/whisperx-api][whisperx-api]]
 Ist die Umgebungsvariable `WHISPERX_API_URL` gesetzt, wird über eine Installation von [[https://github.com/elan-ev/whisperx-api][whisperx-api]] verwendet.
 
 Beispiel für den Eintrag in Stud.IPs `.env`-Datei:
 
 #+begin_src
 WHISPERX_API_URL="http://172.17.0.1:11300"
+#+end_src
+
+** Kontingent
+Nutzende haben ein monatliches Upload-Kontingent. Dieses liegt standardmäßig bei 10GB kann aber über die Umgebungsvariable `SPEECH_TO_TEXT_QUOTA` in Bytes konfiguriert werden.
+
+Beispiel für den Eintrag in Stud.IPs `.env`-Datei:
+
+#+begin_src
+# Upload-Kontingent von 17 GB
+SPEECH_TO_TEXT_QUOTA=18253611008
 #+end_src
 
 * Systemanforderungen

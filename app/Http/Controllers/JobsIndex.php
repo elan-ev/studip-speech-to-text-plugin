@@ -26,7 +26,7 @@ class JobsIndex extends JobsController
                 'jobs' => $jobs,
                 'usage' => UserUpload::getUsage($user),
                 'MAX_UPLOAD' => 1024 * 1024 * 1024 * 1,
-                'QUOTA' => 1024 * 1024 * 1024 * 5,
+                'QUOTA' => UserUpload::getQuota($user),
             ]
         );
     }
