@@ -33,13 +33,14 @@ class RegisterServiceProviders implements MiddlewareInterface
             $this->container->get(\SpeechToTextPlugin\Services\RedirectService::class)
         );
 
-        $token = $_ENV['REPLICATE_TOKEN'] ?? null;
+        $replicateToken = $_ENV['REPLICATE_TOKEN'] ?? null;
+        $hfToken = $_ENV['HF_TOKEN'] ?? null;
         $whisperxApiUrl = $_ENV['WHISPERX_API_URL'] ?? null;
 
-        if ($token) {
+        if ($replicateToken) {
             $this->container->set(
                 PredictionServiceInterface::class,
-                new ReplicatePredictionService($token, $this->logger),
+                new ReplicatePredictionService($replicateToken, $hfToken, $this->logger),
             );
         } elseif ($whisperxApiUrl) {
             $this->container->set(

@@ -36,9 +36,9 @@ class ReplicatePredictionService implements PredictionServiceInterface
 
     public function __construct(
         private string $replicateToken,
+        private string $hfToken,
         private LoggerInterface $logger,
-    ) {
-    }
+    ) {}
 
     /**
      * Initiates a speech-to-text prediction job with the Replicate API.
@@ -50,12 +50,13 @@ class ReplicatePredictionService implements PredictionServiceInterface
      * @param Job          $job        The job entity containing input file reference and metadata
      * @param UriInterface $webhookUri The base URI for webhook callbacks
      * @param string       $language   The code of the language, 'de' by default
+     * @param int          $speakers   The number of speakers, 1 by default
      *
      * @throws InputValidationException  When job input validation fails
      * @throws ApiCommunicationException When communication with Replicate API fails
      * @throws FileOperationException    When file operations fail
      */
-    public function startPrediction(Job $job, UriInterface $webhookUri, string $language = 'de'): void
+    public function startPrediction(Job $job, UriInterface $webhookUri, string $language = 'de', int $speakers = 1): void
     {
         $this->logInfo('Started prediction for job %d', $job->id);
 
@@ -63,7 +64,7 @@ class ReplicatePredictionService implements PredictionServiceInterface
             $this->validateJobInput($job);
             $audioUrl = $this->getAudioUrl($job);
             $webhook = (string) $this->getWebhookUri($job, $webhookUri);
-            $prediction = $this->createPrediction($audioUrl, $webhook, $language);
+            $prediction = $this->createPrediction($audioUrl, $webhook, $language, $speakers);
 
             $job->prediction = json_encode($prediction->json(), self::JSON_OPTIONS);
             $job->status = 'started';
@@ -168,24 +169,32 @@ class ReplicatePredictionService implements PredictionServiceInterface
      * @param string $audioUrl URL to the audio file
      * @param string $webhook  URL for webhook notifications
      * @param string $language The code ofn the language, 'de' by default
+     * @param int $speakers number of speakers, 1 by default
      */
-    private function createPrediction(string $audioUrl, string $webhook, string $language)
+    private function createPrediction(string $audioUrl, string $webhook, string $language, int $speakers)
     {
         $client = new Replicate($this->replicateToken);
+
+        $params = [
+            'audio' => $audioUrl,
+            'batch_size' => 64,
+            'language' => match ($language) {
+                'de' => 'german',
+                'en' => 'english'
+            },
+            'webhook' => $webhook,
+            'webhook_events_filter' => ['start', 'completed'],
+            'diarise_audio' => $speakers > 1,
+        ];
+
+        if ($speakers > 1) {
+            $params['hf_token'] = $this->hfToken;
+        }
 
         try {
             return $client
                 ->predictions()
-                ->create(
-                    self::WHISPER_MODEL_ID,
-                    [
-                        'audio' => $audioUrl,
-                        'batch_size' => 64,
-                        'language' => $language,
-                        'webhook' => $webhook,
-                        'webhook_events_filter' => ['start', 'completed'],
-                    ]
-                );
+                ->create(self::WHISPER_MODEL_ID, $params);
         } catch (\Exception $e) {
             throw new ApiCommunicationException('Failed to create prediction with Replicate API: ' . $e->getMessage(), 0, $e);
         }
@@ -296,13 +305,19 @@ class ReplicatePredictionService implements PredictionServiceInterface
         if (!isset($prediction['output']) || empty($prediction['output'])) {
             throw new InputValidationException('Prediction output text is missing');
         }
+
+        $diarised = $prediction['input']['diarise_audio'] ?? false;
         $output = $prediction['output'];
 
-        if (isset($output['chunks'])) {
-            $job->writePrediction('json', $output['chunks']);
-        }
-        if (isset($output['text'])) {
-            $job->writePrediction('txt', $output['text']);
+        if ($diarised) {
+            $job->writePrediction('json', json_encode($output));
+        } else {
+            if (isset($output['chunks'])) {
+                $job->writePrediction('json', json_encode($output['chunks']));
+            }
+            if (isset($output['text'])) {
+                $job->writePrediction('txt', $output['text']);
+            }
         }
 
         unset($prediction['output']);

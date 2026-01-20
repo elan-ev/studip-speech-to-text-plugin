@@ -57,6 +57,9 @@ class JobsStore extends JobsController
         v::key('language', v::notEmpty())->assert($_POST);
         $language = \Request::get('language');
 
+        v::key('speakers', v::intVal()->between(1, 20))->assert($_POST);
+        $speakers = (int) \Request::get('speakers');
+
         $uploadedFile = $this->validateAndGetUploadedFile($request);
         $this->validateFileQuota($request, $job, $uploadedFile);
 
@@ -72,6 +75,7 @@ class JobsStore extends JobsController
                 $job,
                 $webhookUri,
                 language: $language,
+                speakers: $speakers,
             );
         } catch (ApiCommunicationException) {
             $flash = \Trails\Flash::instance();

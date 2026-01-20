@@ -38,11 +38,11 @@ class UserUpload extends \SimpleORMap
     /**
      * Returns the configured whisper usage quota of a user.
      *
-     * @param \User $user The user for whom the quota is returned.
+     * @param ?\User $user The user for whom the quota is returned.
      *
      * @return int Returns the quota of the given user in bytes.
      */
-    public static function getQuota(\User $user): int
+    public static function getQuota(?\User $user): int
     {
         $quota = $_ENV['SPEECH_TO_TEXT_QUOTA'] ?? 10 * 1024 * 1024 * 1024;
 

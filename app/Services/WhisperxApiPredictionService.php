@@ -33,8 +33,7 @@ class WhisperxApiPredictionService implements PredictionServiceInterface
     public function __construct(
         private string $whisperxApiUrl,
         private LoggerInterface $logger,
-    ) {
-    }
+    ) {}
 
     /**
      * Initiates a speech-to-text prediction job with a `whisperx-api` instance.
@@ -46,12 +45,13 @@ class WhisperxApiPredictionService implements PredictionServiceInterface
      * @param Job          $job        The job entity containing input file reference and metadata
      * @param UriInterface $webhookUri The base URI for webhook callbacks
      * @param string       $language   The code of the language, 'de' by default
+     * @param int          $speakers   The number of speakers, 1 by default
      *
      * @throws InputValidationException  When job input validation fails
      * @throws ApiCommunicationException When communication with `whisperx-api` fails
      * @throws FileOperationException    When file operations fail
      */
-    public function startPrediction(Job $job, UriInterface $webhookUri, string $language = 'de'): void
+    public function startPrediction(Job $job, UriInterface $webhookUri, string $language = 'de', int $speakers = 1): void
     {
         $this->logInfo('Started prediction for job %d', $job->id);
 
@@ -61,19 +61,20 @@ class WhisperxApiPredictionService implements PredictionServiceInterface
                 $this->getAudioUrl($job),
                 (string) $this->getWebhookUri($job, $webhookUri),
                 $language,
+                $speakers,
             );
 
             $job->prediction = json_encode($prediction, self::JSON_OPTIONS);
             $job->status = 'started';
             $job->store();
-        } catch (InputValidationException|ApiCommunicationException|FileOperationException $e) {
+        } catch (InputValidationException | ApiCommunicationException | FileOperationException $e) {
             // Handle specific exceptions
             $this->handleJobError($job, $e);
             throw $e;
         } catch (\Exception $e) {
             // Catch any other unexpected exceptions
             $this->handleJobError($job, $e);
-            throw new ApiCommunicationException('Unexpected error during prediction start: '.$e->getMessage(), 0, $e);
+            throw new ApiCommunicationException('Unexpected error during prediction start: ' . $e->getMessage(), 0, $e);
         }
     }
 
@@ -110,7 +111,7 @@ class WhisperxApiPredictionService implements PredictionServiceInterface
             $this->updateJobFromWebhook($job, $prediction);
 
             return $this->jsonResponse($response, ['status' => 'success']);
-        } catch (WebhookException|InputValidationException|FileOperationException $e) {
+        } catch (WebhookException | InputValidationException | FileOperationException $e) {
             $this->logError('%s: %s', $e::class, $e->getMessage());
 
             return $this->jsonResponse($response, [
@@ -166,25 +167,31 @@ class WhisperxApiPredictionService implements PredictionServiceInterface
      * @param string $audioUrl URL to the audio file
      * @param string $webhookUrl  URL for webhook notifications
      * @param string $language code of the language, 'de' by default
+     * @param int $speakers number of speakers, 1 by default
      */
-    private function createPrediction(string $audioUrl, string $webhookUrl, $language)
+    private function createPrediction(string $audioUrl, string $webhookUrl, $language, $speakers)
     {
         $client = new \GuzzleHttp\Client([
             'base_uri' => $this->whisperxApiUrl,
             'timeout' => 2.0,
         ]);
 
+        $formParams = [
+            'lang' => $language,
+            'model' => 'small',
+            'file_url' => $audioUrl,
+            'webhook_url' => $webhookUrl,
+            'min_speakers' => $speakers,
+            'max_speakers' => $speakers,
+        ];
+
+        if ($speakers > 1) {
+            $formParams['min_speakers'] = $speakers;
+            $formParams['max_speakers'] = $speakers;
+        }
+
         try {
-            $response = $client->request('POST', '/jobs', [
-                'form_params' => [
-                    'lang' => $language,
-                    'model' => 'small',
-                    'file_url' => $audioUrl,
-                    'webhook_url' => $webhookUrl,
-                    // 'min_speakers' => 0,
-                    // 'max_speakers' => 0,
-                ]
-            ]);
+            $response = $client->request('POST', '/jobs', ['form_params' => $formParams]);
             $code = $response->getStatusCode();
             if ($code !== 200) {
                 throw new \RuntimeException();
@@ -206,9 +213,8 @@ class WhisperxApiPredictionService implements PredictionServiceInterface
                     "get" => $this->whisperxApiUrl . '/jobs/' . $body['task_id'],
                 ]
             ];
-
         } catch (\Exception $e) {
-            throw new ApiCommunicationException('Failed to create prediction: '.$e->getMessage(), 0, $e);
+            throw new ApiCommunicationException('Failed to create prediction: ' . $e->getMessage(), 0, $e);
         }
     }
 
@@ -247,18 +253,18 @@ class WhisperxApiPredictionService implements PredictionServiceInterface
             $validator = v::key('from', v::notEmpty())->key('job_id', v::intVal()->positive());
             $validator->assert($queryParams);
         } catch (\Exception $e) {
-            throw new WebhookException('Invalid webhook parameters: '.$e->getMessage());
+            throw new WebhookException('Invalid webhook parameters: ' . $e->getMessage());
         }
 
         if ('whisperx-api' !== $queryParams['from']) {
-            throw new WebhookException('Unknown webhook source: '.$queryParams['from']);
+            throw new WebhookException('Unknown webhook source: ' . $queryParams['from']);
         }
 
         $jobId = (int) $queryParams['job_id'];
         $job = Job::find($jobId);
 
         if (!$job) {
-            throw new WebhookException('Could not find job: '.$jobId);
+            throw new WebhookException('Could not find job: ' . $jobId);
         }
 
         return $job;
@@ -285,7 +291,7 @@ class WhisperxApiPredictionService implements PredictionServiceInterface
         // Validate that status is one of the expected values
         $validStatuses = JobStatus::names();
         if (!in_array($prediction['status'], $validStatuses)) {
-            throw new WebhookException('Invalid prediction status: '.$prediction['status']);
+            throw new WebhookException('Invalid prediction status: ' . $prediction['status']);
         }
 
         return $prediction;

@@ -15,8 +15,9 @@ interface PredictionServiceInterface
      * @param Job          $job        The job to process
      * @param UriInterface $webhookUri The URI to call when the prediction is complete
      * @param string       $language   The code of the language, 'de' by default
+     * @param int          $speakers   The number of speakers, 1 by default
      */
-    public function startPrediction(Job $job, UriInterface $webhookUri, string $language = 'de'): void;
+    public function startPrediction(Job $job, UriInterface $webhookUri, string $language = 'de', int $speakers = 1): void;
 
     /**
      * Process incoming webhook from prediction service.

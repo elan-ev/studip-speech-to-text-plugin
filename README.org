@@ -16,10 +16,15 @@ Aktuell stehen zwei Adapter zur Verfügung:
 Ist die Umgebungsvariable `REPLICATE_TOKEN` gesetzt, wird über [[https://replicate.com][Replicate]] das Model https://replicate.com/vaibhavs10/incredibly-fast-whisper verwendet.
 Das Token erhält man unter https://replicate.com/account/api-tokens
 
+Außerdem ist ein HuggingFace Token (https://huggingface.co/settings/tokens) nötig, um die "Speaker Diarisation" zu gewährleisten. Dazu muss zu diesen Bedingungen zugestimmt werden:
+  - https://huggingface.co/pyannote/speaker-diarization-3.1
+  - https://huggingface.co/pyannote/segmentation-3.0
+
 Beispiel für den Eintrag in Stud.IPs `.env`-Datei:
 
 #+begin_src
 REPLICATE_TOKEN="r8_..."
+HF_TOKEN="hf_..."
 #+end_src
 
 *** [[https://github.com/elan-ev/whisperx-api][whisperx-api]]
