@@ -13,8 +13,8 @@ const emit = defineEmits(["update:open", "update:status"]);
 
 const form = useForm({
   audio: null,
+  diarize: true,
   language: DEFAULT_LANGUAGE,
-  speakers: 1,
 });
 const route = useRoute();
 
@@ -104,14 +104,11 @@ watch(
 
           <div class="formpart">
             <label class="studiprequired">
+              <input v-model="form.diarize" type="checkbox" name="diarize" required aria-required="true" />
               <span class="textlabel">
-                {{ $gettext("Anzahl Sprechender") }}
+                {{ $gettext("Identifizierung der Sprechenden") }}
               </span>
               <span class="asterisk" :title="$gettext('Dies ist ein Pflichtfeld')" aria-hidden="true">*</span>
-              <div>
-                <input v-model="form.speakers" type="range" name="speakers" min="1" max="20" />
-                <output>{{ form.speakers }}</output>
-              </div>
             </label>
           </div>
         </template>
@@ -133,11 +130,6 @@ watch(
 </template>
 
 <style scoped>
-div:has(> input[type="range"]) {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
 .formpart + .formpart {
   margin-block-start: 1rem;
 }

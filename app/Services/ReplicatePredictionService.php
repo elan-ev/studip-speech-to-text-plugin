@@ -38,7 +38,8 @@ class ReplicatePredictionService implements PredictionServiceInterface
         private string $replicateToken,
         private string $hfToken,
         private LoggerInterface $logger,
-    ) {}
+    ) {
+    }
 
     /**
      * Initiates a speech-to-text prediction job with the Replicate API.
@@ -50,13 +51,13 @@ class ReplicatePredictionService implements PredictionServiceInterface
      * @param Job          $job        The job entity containing input file reference and metadata
      * @param UriInterface $webhookUri The base URI for webhook callbacks
      * @param string       $language   The code of the language, 'de' by default
-     * @param int          $speakers   The number of speakers, 1 by default
+     * @param bool         $diarize    Should the transcription be diarized, false by default
      *
      * @throws InputValidationException  When job input validation fails
      * @throws ApiCommunicationException When communication with Replicate API fails
      * @throws FileOperationException    When file operations fail
      */
-    public function startPrediction(Job $job, UriInterface $webhookUri, string $language = 'de', int $speakers = 1): void
+    public function startPrediction(Job $job, UriInterface $webhookUri, string $language = 'de', bool $diarize = false): void
     {
         $this->logInfo('Started prediction for job %d', $job->id);
 
@@ -64,7 +65,7 @@ class ReplicatePredictionService implements PredictionServiceInterface
             $this->validateJobInput($job);
             $audioUrl = $this->getAudioUrl($job);
             $webhook = (string) $this->getWebhookUri($job, $webhookUri);
-            $prediction = $this->createPrediction($audioUrl, $webhook, $language, $speakers);
+            $prediction = $this->createPrediction($audioUrl, $webhook, $language, $diarize);
 
             $job->prediction = json_encode($prediction->json(), self::JSON_OPTIONS);
             $job->status = 'started';
@@ -169,9 +170,9 @@ class ReplicatePredictionService implements PredictionServiceInterface
      * @param string $audioUrl URL to the audio file
      * @param string $webhook  URL for webhook notifications
      * @param string $language The code ofn the language, 'de' by default
-     * @param int $speakers number of speakers, 1 by default
+     * @param bool $diarize Should the transcription be diarized, false by default
      */
-    private function createPrediction(string $audioUrl, string $webhook, string $language, int $speakers)
+    private function createPrediction(string $audioUrl, string $webhook, string $language, bool $diarize)
     {
         $client = new Replicate($this->replicateToken);
 
@@ -184,12 +185,8 @@ class ReplicatePredictionService implements PredictionServiceInterface
             },
             'webhook' => $webhook,
             'webhook_events_filter' => ['start', 'completed'],
-            'diarise_audio' => $speakers > 1,
+            'diarise_audio' => $diarize,
         ];
-
-        if ($speakers > 1) {
-            $params['hf_token'] = $this->hfToken;
-        }
 
         try {
             return $client
