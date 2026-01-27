@@ -10,6 +10,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 use Psr\Log\LoggerInterface;
 use SpeechToTextPlugin\Contracts\Services\PredictionServiceInterface;
 use SpeechToTextPlugin\Contracts\Services\RedirectServiceInterface;
+use SpeechToTextPlugin\Services\MurmurAiPredictionService;
 use SpeechToTextPlugin\Services\ReplicatePredictionService;
 use SpeechToTextPlugin\Services\WhisperxApiPredictionService;
 
@@ -35,7 +36,11 @@ class RegisterServiceProviders implements MiddlewareInterface
 
         $replicateToken = $_ENV['REPLICATE_TOKEN'] ?? null;
         $hfToken = $_ENV['HF_TOKEN'] ?? null;
+
         $whisperxApiUrl = $_ENV['WHISPERX_API_URL'] ?? null;
+
+        $murmurAiUrl = $_ENV['MURMURAI_URL'] ?? null;
+        $murmurAiApiKey = $_ENV['MURMURAI_API_KEY'] ?? null;
 
         if ($replicateToken) {
             $this->container->set(
@@ -46,6 +51,11 @@ class RegisterServiceProviders implements MiddlewareInterface
             $this->container->set(
                 PredictionServiceInterface::class,
                 new WhisperxApiPredictionService($whisperxApiUrl, $this->logger),
+            );
+        } elseif ($murmurAiUrl) {
+            $this->container->set(
+                PredictionServiceInterface::class,
+                new MurmurAiPredictionService($murmurAiUrl, $murmurAiApiKey, $this->logger),
             );
         } else {
             throw new \RuntimeException('No PredictionService has been configured. See README.org.');
