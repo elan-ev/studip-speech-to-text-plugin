@@ -26,8 +26,9 @@ class ReplicatePredictionService implements PredictionServiceInterface
 
     /**
      * The model identifier for the WhisperX speech-to-text model on Replicate.
+     * @var string
      */
-    private const string WHISPER_MODEL_ID = 'vaibhavs10/incredibly-fast-whisper:3ab86df6c8f54c11309d4d1f930ac292bad43ace52d10c80d87eb258b3c9f79c';
+    private const WHISPER_MODEL_ID = 'vaibhavs10/incredibly-fast-whisper:3ab86df6c8f54c11309d4d1f930ac292bad43ace52d10c80d87eb258b3c9f79c';
 
     /**
      * JSON encoding options used throughout the class.

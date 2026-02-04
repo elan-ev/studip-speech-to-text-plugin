@@ -37,8 +37,8 @@ class HandleValidation implements MiddlewareInterface
             Factory::setDefaultInstance(
                 (new Factory())
                     ->withTranslator($this->translate(...))
-                    ->withParameterStringifier(new readonly class (new KeepOriginalStringName()) implements ParameterStringifier {
-                        public function __construct(private ParameterStringifier $stringifier)
+                    ->withParameterStringifier(new class (new KeepOriginalStringName()) implements ParameterStringifier {
+                        public function __construct(private readonly ParameterStringifier $stringifier)
                         {
                         }
 
