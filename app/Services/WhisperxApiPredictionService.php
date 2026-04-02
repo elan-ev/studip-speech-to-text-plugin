@@ -2,7 +2,6 @@
 
 namespace SpeechToTextPlugin\Services;
 
-use GuzzleHttp\Psr7;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\UriInterface;
@@ -17,6 +16,7 @@ use SpeechToTextPlugin\Exceptions\WebhookException;
 use SpeechToTextPlugin\Models\Job;
 use SpeechToTextPlugin\Models\JobStatus;
 use SpeechToTextPlugin\Traits\LogsErrors;
+use SpeechToTextPlugin\Traits\TracksMetrics;
 
 /**
  * @SuppressWarnings(StaticAccess)
@@ -24,6 +24,7 @@ use SpeechToTextPlugin\Traits\LogsErrors;
 class WhisperxApiPredictionService implements PredictionServiceInterface
 {
     use LogsErrors;
+    use TracksMetrics;
 
     /**
      * JSON encoding options used throughout the class.
@@ -54,6 +55,7 @@ class WhisperxApiPredictionService implements PredictionServiceInterface
      */
     public function startPrediction(Job $job, UriInterface $webhookUri, string $language = 'de', bool $diarize = false): void
     {
+        $timer = self::trackTime('start_prediction.timer');
         $this->logInfo('Started prediction for job %d', $job->id);
 
         try {
@@ -68,14 +70,19 @@ class WhisperxApiPredictionService implements PredictionServiceInterface
             $job->prediction = json_encode($prediction, self::JSON_OPTIONS);
             $job->status = 'started';
             $job->store();
+            self::trackCount('start_prediction.succeeded');
         } catch (InputValidationException | ApiCommunicationException | FileOperationException $e) {
             // Handle specific exceptions
+            self::trackCount('start_prediction.failed.job');
             $this->handleJobError($job, $e);
             throw $e;
         } catch (\Exception $e) {
             // Catch any other unexpected exceptions
+            self::trackCount('start_prediction.failed.unexpected');
             $this->handleJobError($job, $e);
             throw new ApiCommunicationException('Unexpected error during prediction start: ' . $e->getMessage(), 0, $e);
+        } finally {
+            $timer();
         }
     }
 
@@ -93,6 +100,7 @@ class WhisperxApiPredictionService implements PredictionServiceInterface
      */
     public function processWebhook(Request $request, Response $response): Response
     {
+        $timer = self::trackTime('process_webhook.timer');
         try {
             $job = $this->validateWebhookAndGetJob($request);
             $this->logInfo(
@@ -102,11 +110,13 @@ class WhisperxApiPredictionService implements PredictionServiceInterface
             );
 
             $prediction = $this->validateAndExtractPrediction($request, $job);
+            self::trackCount('process_webhook.' . $prediction['status']);
 
             if ('succeeded' === $prediction['status']) {
                 $prediction = $this->writeOutput($job, $prediction);
                 $this->logInfo('Successfully wrote output for job %d', $job->id);
                 \NotificationCenter::postNotification(Job::class . 'DidSucceed', $job);
+                self::trackTiming('process_webhook.predict_time', 1000 * ($prediction['metrics']['predict_time'] ?? 0));
             }
 
             $this->updateJobFromWebhook($job, $prediction);
@@ -126,6 +136,8 @@ class WhisperxApiPredictionService implements PredictionServiceInterface
                 'status' => 'error',
                 'message' => 'Internal server error',
             ], 500);
+        } finally {
+            $timer();
         }
     }
 
