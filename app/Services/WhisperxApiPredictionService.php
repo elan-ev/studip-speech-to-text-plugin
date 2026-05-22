@@ -2,6 +2,7 @@
 
 namespace SpeechToTextPlugin\Services;
 
+use JsonToSrt\Converter\WordLevelToSrtConverter;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\UriInterface;
@@ -46,14 +47,12 @@ class WhisperxApiPredictionService implements PredictionServiceInterface
      *
      * @param Job          $job        The job entity containing input file reference and metadata
      * @param UriInterface $webhookUri The base URI for webhook callbacks
-     * @param string       $language   The code of the language, 'de' by default
-     * @param bool         $diarize    Should the transcription be diarized, false by default
      *
      * @throws InputValidationException  When job input validation fails
      * @throws ApiCommunicationException When communication with `whisperx-api` fails
      * @throws FileOperationException    When file operations fail
      */
-    public function startPrediction(Job $job, UriInterface $webhookUri, string $language = 'de', bool $diarize = false): void
+    public function startPrediction(Job $job, UriInterface $webhookUri): void
     {
         $timer = self::trackTime('start_prediction.timer');
         $this->logInfo('Started prediction for job %d', $job->id);
@@ -63,8 +62,8 @@ class WhisperxApiPredictionService implements PredictionServiceInterface
             $prediction = $this->createPrediction(
                 $this->getAudioUrl($job),
                 (string) $this->getWebhookUri($job, $webhookUri),
-                $language,
-                $diarize,
+                $job->language,
+                $job->diarize,
             );
 
             $job->prediction = json_encode($prediction, self::JSON_OPTIONS);
@@ -333,20 +332,18 @@ class WhisperxApiPredictionService implements PredictionServiceInterface
         $output = $prediction['output'];
 
         if (isset($output['json_content'])) {
-            $this->logInfo('Write json %s', json_encode($output['json_content']));
+            $json = $output['json_content'];
+            $this->logInfo('Write json %s', json_encode($json));
             $job->writePrediction('json', $output['json_content']);
+
+            $subtitles = self::generateSubtitles($json, $job->diarize);
+            $this->logInfo('Write srt %s', json_encode($subtitles));
+            $job->writePrediction('srt', $subtitles);
         }
-        if (isset($output['srt_content'])) {
-            $this->logInfo('Write srt %s', json_encode($output['srt_content']));
-            $job->writePrediction('srt', $output['srt_content']);
-        }
+
         if (isset($output['txt_content'])) {
             $this->logInfo('Write txt %s', json_encode($output['txt_content']));
             $job->writePrediction('txt', $output['txt_content']);
-        }
-        if (isset($output['vtt_content'])) {
-            $this->logInfo('Write vtt %s', json_encode($output['vtt_content']));
-            $job->writePrediction('vtt', $output['vtt_content']);
         }
 
         unset($prediction['output']);
@@ -389,5 +386,17 @@ class WhisperxApiPredictionService implements PredictionServiceInterface
         $job->store();
 
         $this->logError('Job %d error (%s): %s', $job->id, $customStatus, $exception->getMessage());
+    }
+
+    protected static function generateSubtitles(string $jsonContent, bool $diarize): string
+    {
+            $converter = new WordLevelToSrtConverter(
+                maxCharsPerLine: 37,
+                maxLines: 2,
+            );
+
+        $result = $converter->processJson($jsonContent);
+
+        return $diarize ? $result['srtWithSpeakers'] : $result['srtClean'];
     }
 }

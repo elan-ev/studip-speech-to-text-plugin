@@ -6,11 +6,11 @@ defineProps({
     },
 });
 const formatDate = (date) => {
-    return pad(date.getDate()) + '.' + pad(date.getMonth() + 1) + '.' + date.getFullYear();
+    return pad(date.getDate()) + "." + pad(date.getMonth() + 1) + "." + date.getFullYear();
 };
 
 const pad = (what) => {
-    return what.toString().padStart(2, '0');
+    return what.toString().padStart(2, "0");
 };
 </script>
 

@@ -1,8 +1,8 @@
 <script setup>
-import { DialogContent, DialogDescription, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from 'radix-vue';
-import { computed, nextTick, ref } from 'vue';
-import { useGettext } from 'vue3-gettext';
-import VueResizable from 'vue-resizable';
+import { DialogContent, DialogDescription, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from "radix-vue";
+import { computed, nextTick, ref } from "vue";
+import { useGettext } from "@/Composables/use-gettext.js";
+import VueResizable from "vue-resizable";
 
 const { $gettext } = useGettext();
 const dialogPadding = 3;
@@ -66,7 +66,7 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['confirm', 'update:open']);
+const emit = defineEmits(["confirm", "update:open"]);
 
 const currentHeight = ref(300);
 const currentWidth = ref(450);
@@ -83,8 +83,8 @@ const buttonA = computed(() => {
     }
     if (props.question || props.alert) {
         button = {};
-        button.text = $gettext('Ja');
-        button.class = 'accept';
+        button.text = $gettext("Ja");
+        button.class = "accept";
     }
     if (props.confirmText && props.confirmShow) {
         button = {};
@@ -100,13 +100,13 @@ const buttonB = computed(() => {
     let button = false;
     if (props.message) {
         button = {};
-        button.text = $gettext('Ok');
-        button.class = '';
+        button.text = $gettext("Ok");
+        button.class = "";
     }
     if (props.question || props.alert) {
         button = {};
-        button.text = $gettext('Nein');
-        button.class = 'cancel';
+        button.text = $gettext("Nein");
+        button.class = "cancel";
     }
     if (props.closeText) {
         button = {};
@@ -114,7 +114,7 @@ const buttonB = computed(() => {
         if (props.closeClass) {
             button.class = props.closeClass;
         } else {
-            button.class = 'cancel';
+            button.class = "cancel";
         }
     }
 
@@ -126,21 +126,21 @@ const dialogTitle = computed(() => {
         return props.title;
     }
     if (props.alert || props.question) {
-        return $gettext('Bitte bestätigen Sie die Aktion');
+        return $gettext("Bitte bestätigen Sie die Aktion");
     }
     if (props.message) {
-        return $gettext('Information');
+        return $gettext("Information");
     }
-    return '';
+    return "";
 });
 const dialogWidth = computed(() => {
-    return currentWidth.value ? currentWidth.value - dialogPadding * 4 + 'px' : 'unset';
+    return currentWidth.value ? currentWidth.value - dialogPadding * 4 + "px" : "unset";
 });
 const dialogHeight = computed(() => {
-    return currentHeight.value ? currentHeight.value - headerHeight.value - dialogPadding * 4 + 'px' : 'unset';
+    return currentHeight.value ? currentHeight.value - headerHeight.value - dialogPadding * 4 + "px" : "unset";
 });
 const contentHeight = computed(() => {
-    return currentHeight.value ? currentHeight.value - footerHeight.value + 'px' : 'unset';
+    return currentHeight.value ? currentHeight.value - footerHeight.value + "px" : "unset";
 });
 const headerHeight = computed(() => {
     return headerRef.value?.offsetHeight ?? 0;
@@ -169,8 +169,8 @@ const resizeHandler = (data) => {
     top.value = data.top;
 };
 
-const setIsOpen = (value) => emit('update:open', value);
-const confirmDialog = () => emit('confirm');
+const setIsOpen = (value) => emit("update:open", value);
+const confirmDialog = () => emit("confirm");
 </script>
 
 <template>

@@ -1,7 +1,8 @@
 <script setup>
-import { computed, watch } from "vue";
+import { computed, reactive, toRaw, watch } from "vue";
 import { useRoute } from "@elan-ev/studip-named-routes";
-import { useForm } from "@inertiajs/vue3";
+import { useQueryClient } from "@tanstack/vue-query";
+import { useApi } from "@/Composables/use-api.js";
 import { DEFAULT_LANGUAGE, LANGUAGES } from "../config.js";
 import StudipDialog from "./base/StudipDialog.vue";
 import MessageBox from "./base/StudipMessageBox.vue";
@@ -11,31 +12,41 @@ import { format } from "../Composables/use-file-size";
 const props = defineProps(["open", "file", "status"]);
 const emit = defineEmits(["update:open", "update:status"]);
 
-const form = useForm({
+const form = reactive({
   audio: null,
   diarize: true,
   language: DEFAULT_LANGUAGE,
+  processing: false,
+  errors: null,
 });
+
 const route = useRoute();
+const { createJob } = useApi();
+const queryClient = useQueryClient();
 
 const setIsOpen = (value) => emit("update:open", value);
 
-const onConfirm = () => {
-  form
-    .transform((data) => ({ ...data, audio: props.file }))
-    .post(route("jobs.store"), {
-      forceFormData: true,
-      onStart() {
-        emit("update:status", "upload");
-      },
-      onSuccess() {
-        setIsOpen(false);
-        emit("update:status", "success");
-      },
-      onError(errors) {
-        emit("update:status", "error");
-      },
-    });
+const updateStatus = (status) => emit("update:status", status);
+
+const onConfirm = async () => {
+  form.processing = true;
+  updateStatus("upload");
+  try {
+    const response = await createJob({ ...toRaw(form), audio: props.file });
+
+    if (!response.ok) {
+      const { errors } = await response.json();
+      form.errors = errors;
+      throw new Error();
+    }
+    setIsOpen(false);
+    updateStatus("success");
+  } catch (error) {
+    updateStatus("error");
+  } finally {
+    form.processing = false;
+    queryClient.invalidateQueries({ queryKey: ["jobs"] });
+  }
 };
 
 const filesize = computed(() => props.file?.size ?? 0);
@@ -53,12 +64,12 @@ watch(
 <template>
   <StudipDialog
     :open="open"
-    :title="$gettext('Transkription erstellen')"
-    :description="$gettext('Laden Sie eine Audiodatei hoch und klicken Sie dann auf \'Transkription erstellen\'.')"
-    :confirm-text="status === 'configure' ? $gettext('Transkription erstellen') : null"
+    :title="'Transkription erstellen'"
+    :description="'Laden Sie eine Audiodatei hoch und klicken Sie dann auf \'Transkription erstellen\'.'"
+    :confirm-text="status === 'configure' ? 'Transkription erstellen' : null"
     confirm-class="accept"
     :confirm-disabled="form.processing"
-    :close-text="$gettext('Abbrechen')"
+    :close-text="'Abbrechen'"
     :height="350"
     @update:open="setIsOpen"
     @confirm="onConfirm"
@@ -69,9 +80,9 @@ watch(
           <div class="formpart">
             <label class="studiprequired">
               <span class="textlabel">
-                {{ $gettext("Audiodatei") }}
+                {{ "Audiodatei" }}
               </span>
-              <span class="asterisk" :title="$gettext('Dies ist ein Pflichtfeld')" aria-hidden="true">*</span>
+              <span class="asterisk" :title="'Dies ist ein Pflichtfeld'" aria-hidden="true">*</span>
               <div>
                 {{ file.name }} ({{ format(filesize) }})
                 <input
@@ -89,9 +100,9 @@ watch(
           <div class="formpart">
             <label class="studiprequired">
               <span class="textlabel">
-                {{ $gettext("Sprache der Datei") }}
+                {{ "Sprache der Datei" }}
               </span>
-              <span class="asterisk" :title="$gettext('Dies ist ein Pflichtfeld')" aria-hidden="true">*</span>
+              <span class="asterisk" :title="'Dies ist ein Pflichtfeld'" aria-hidden="true">*</span>
               <div>
                 <select v-model="form.language">
                   <option v-for="[key, entry] of Object.entries(LANGUAGES)" :value="key">
@@ -106,9 +117,9 @@ watch(
             <label class="studiprequired">
               <input v-model="form.diarize" type="checkbox" name="diarize" required aria-required="true" />
               <span class="textlabel">
-                {{ $gettext("Identifizierung der Sprechenden") }}
+                {{ "Identifizierung der Sprechenden" }}
               </span>
-              <span class="asterisk" :title="$gettext('Dies ist ein Pflichtfeld')" aria-hidden="true">*</span>
+              <span class="asterisk" :title="'Dies ist ein Pflichtfeld'" aria-hidden="true">*</span>
             </label>
           </div>
         </template>
@@ -120,8 +131,8 @@ watch(
         <template v-if="status === 'success'"> Success! </template>
 
         <template v-if="status === 'error'">
-          <MessageBox v-for="(entry, key) of form.errors" :key="key" type="error" hide-details hide-close>{{
-            entry
+          <MessageBox v-for="entry in form.errors" :key="entry.id" type="error" hide-details hide-close>{{
+            entry.title
           }}</MessageBox>
         </template>
       </form>

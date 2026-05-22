@@ -11,12 +11,9 @@ use Slim\Exception\HttpBadRequestException;
 use Slim\Exception\HttpInternalServerErrorException;
 use Slim\Exception\HttpUnauthorizedException;
 use SpeechToTextPlugin\Contracts\Services\PredictionServiceInterface;
-use SpeechToTextPlugin\Exceptions\BadRequestException;
 use SpeechToTextPlugin\Exceptions\InternalServerErrorException;
-use SpeechToTextPlugin\Files\PublicFolder;
 use SpeechToTextPlugin\Models\Job;
 use SpeechToTextPlugin\Models\UserUpload;
-use SpeechToTextPlugin\Traits\Authorizing;
 use SpeechToTextPlugin\Exceptions\ApiCommunicationException;
 
 /**
@@ -26,10 +23,8 @@ use SpeechToTextPlugin\Exceptions\ApiCommunicationException;
  * @SuppressWarnings(StaticAccess)
  * @SuppressWarnings(UnusedFormalParameter)
  */
-class JobsStore extends JobsController
+class JobsStore extends Controller
 {
-    use Authorizing;
-
     #[Inject]
     protected PredictionServiceInterface $predictionService;
 
@@ -52,13 +47,17 @@ class JobsStore extends JobsController
             throw new HttpUnauthorizedException($request, 'User is not authorized to create a job.');
         }
 
-        $job = Job::create(['user_id' => $user->id]);
-
         v::key('language', v::notEmpty())->assert($_POST);
         $language = \Request::get('language');
 
         v::key('diarize', v::boolVal())->assert($_POST);
         $diarize = (int) \Request::get('diarize');
+
+        $job = Job::create([
+            'user_id' => $user->id,
+            'diarize' => $diarize,
+            'language' => $language,
+        ]);
 
         $uploadedFile = $this->validateAndGetUploadedFile($request);
         $this->validateFileQuota($request, $job, $uploadedFile);
@@ -74,15 +73,23 @@ class JobsStore extends JobsController
             $this->predictionService->startPrediction(
                 $job,
                 $webhookUri,
-                language: $language,
-                diarize: $diarize,
             );
         } catch (ApiCommunicationException) {
-            $flash = \Trails\Flash::instance();
-            $flash->set('errors', ['api' => 'Fehler bei der Kommunikation mit dem Audiotranskriptionsdienst.']);
+            return $this->jsonResponse(
+                [
+                    'errors' => [
+                        [
+                            'id' => 'api',
+                            'status' => 500,
+                            'title' => 'Fehler bei der Kommunikation mit dem Audiotranskriptionsdienst.',
+                        ]
+                    ]
+                ],
+                500
+            );
         }
 
-        return $this->redirectToNamedRoute('jobs.index');
+        return $this->jsonResponse(status: 202);
     }
 
     /**

@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed } from "vue";
 
 const props = defineProps({
     alt: {
@@ -19,7 +19,7 @@ const props = defineProps({
     role: {
         type: String,
         required: false,
-        default: 'clickable',
+        default: "clickable",
     },
     shape: {
         type: String,
@@ -34,40 +34,40 @@ const props = defineProps({
 
 const color = computed(() => {
     switch (props.role) {
-        case 'info':
-            return 'black';
+        case "info":
+            return "black";
 
-        case 'inactive':
-            return 'grey';
+        case "inactive":
+            return "grey";
 
-        case 'accept':
-        case 'status-green':
-            return 'green';
+        case "accept":
+        case "status-green":
+            return "green";
 
-        case 'attention':
-        case 'new':
-        case 'status-red':
-            return 'red';
+        case "attention":
+        case "new":
+        case "status-red":
+            return "red";
 
-        case 'info_alt':
-            return 'white';
+        case "info_alt":
+            return "white";
 
-        case 'status-yellow':
-            return 'yellow';
+        case "status-yellow":
+            return "yellow";
 
-        case 'sort':
-        case 'clickable':
-        case 'navigation':
+        case "sort":
+        case "clickable":
+        case "navigation":
         default:
-            return 'blue';
+            return "blue";
     }
 });
 
 const url = computed(() => {
-    if (props.shape.startsWith('http')) {
+    if (props.shape.startsWith("http")) {
         return props.shape;
     }
-    const path = props.shape.split('+').reverse().join('/');
+    const path = props.shape.split("+").reverse().join("/");
     return `${window.STUDIP.ASSETS_URL}images/icons/${color.value}/${path}.svg`;
 });
 </script>

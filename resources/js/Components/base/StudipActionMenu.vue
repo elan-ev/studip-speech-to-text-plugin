@@ -1,7 +1,7 @@
 <script setup>
-import StudipIcon from './StudipIcon.vue';
-import { computed } from 'vue';
-import { useGettext } from 'vue3-gettext';
+import StudipIcon from "./StudipIcon.vue";
+import { computed } from "vue";
+import { useGettext } from "@/Composables/use-gettext.js";
 
 const ACTIONMENU_THRESHOLD = 1;
 
@@ -18,11 +18,11 @@ const props = defineProps({
     },
     context: {
         type: String,
-        default: '',
+        default: "",
     },
 });
 
-const emit = defineEmits(['']);
+const emit = defineEmits([""]);
 
 const linkAttributes = (item) => {
     let attributes = item.attributes;
@@ -57,22 +57,22 @@ const close = () => {
 
 const navigationItems = computed(() => {
     return props.items.map((item) => {
-        let classes = item.classes ?? '';
+        let classes = item.classes ?? "";
         if (item.disabled) {
-            classes += ' action-menu-item-disabled';
+            classes += " action-menu-item-disabled";
         }
         return {
             label: item.label,
-            url: item.url || '#',
+            url: item.url || "#",
             emit: item.emit || false,
             emitArguments: item.emitArguments || [],
             icon: item.icon
                 ? {
                       shape: item.icon,
-                      role: item.disabled ? 'inactive' : 'clickable',
+                      role: item.disabled ? "inactive" : "clickable",
                   }
                 : false,
-            type: item.type || 'link',
+            type: item.type || "link",
             name: item.name ?? null,
             classes: classes.trim(),
             attributes: item.attributes || {},
@@ -90,14 +90,14 @@ const shouldCollapse = computed(() => {
     if (collapseAt === true) {
         return true;
     }
-    return Number.parseInt(collapseAt) <= props.items.filter((item) => item.type !== 'separator').length;
+    return Number.parseInt(collapseAt) <= props.items.filter((item) => item.type !== "separator").length;
 });
 const title = computed(() => {
     return props.context
-        ? $gettext('Aktionsmenü für %{context}', {
+        ? $gettext("Aktionsmenü für %{context}", {
               context: props.context,
           })
-        : $gettext('Aktionsmenü');
+        : $gettext("Aktionsmenü");
 });
 </script>
 
@@ -110,7 +110,7 @@ const title = computed(() => {
         </button>
         <div class="action-menu-content">
             <div class="action-menu-title">
-                {{ $gettext('Aktionen') }}
+                {{ $gettext("Aktionen") }}
             </div>
             <ul class="action-menu-list">
                 <li

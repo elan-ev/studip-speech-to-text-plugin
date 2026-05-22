@@ -11,7 +11,7 @@ use SpeechToTextPlugin\Contracts\Services\PredictionServiceInterface;
  * @SuppressWarnings(StaticAccess)
  * @SuppressWarnings(UnusedFormalParameter)
  */
-class JobsWebhook extends JobsController
+class JobsWebhook extends Controller
 {
     #[Inject]
     protected PredictionServiceInterface $predictionService;

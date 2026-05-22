@@ -1,11 +1,18 @@
 <?php
 
+use JsonApi\Contracts\JsonApiPlugin;
 use Slim\Interfaces\RouteCollectorProxyInterface;
+use SpeechToTextPlugin\JsonApi\Routes;
+use SpeechToTextPlugin\JsonApi\Schemas;
 use SpeechToTextPlugin\Routing\Router;
 use SpeechToTextPlugin\Models\Job;
 
-class SpeechToTextPlugin extends StudIPPlugin implements SystemPlugin, PrivacyPlugin
+require_once __DIR__ . '/vendor/autoload.php';
+
+class SpeechToTextPlugin extends StudIPPlugin implements JsonApiPlugin, SystemPlugin, PrivacyPlugin
 {
+    use Routes;
+    use Schemas;
     use TranslatablePluginTrait;
 
     private Router $router;
@@ -18,8 +25,6 @@ class SpeechToTextPlugin extends StudIPPlugin implements SystemPlugin, PrivacyPl
     public function __construct()
     {
         parent::__construct();
-
-        require_once __DIR__ . '/vendor/autoload.php';
 
         NotificationCenter::on('UserDidDelete', $this->onDeleteUser(...));
         NotificationCenter::on('UserDataDidRemove', $this->onRemoveData(...));

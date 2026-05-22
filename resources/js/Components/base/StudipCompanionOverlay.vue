@@ -1,5 +1,5 @@
 <script setup>
-import { useCompanionOverlay } from '../../composables/companion-overlay.js';
+import { useCompanionOverlay } from "../../composables/companion-overlay.js";
 
 const { show, message, mood, hideCompanionOverlay } = useCompanionOverlay();
 </script>
@@ -13,7 +13,7 @@ const { show, message, mood, hideCompanionOverlay } = useCompanionOverlay();
             <!-- eslint-disable-next-line vue/no-v-html -->
             <div class="cw-companion-overlay-content" v-html="message"></div>
             <button class="cw-compantion-overlay-close" @click="hideCompanionOverlay">
-                <span class="sr-only">{{ $gettext('Schließen') }}</span>
+                <span class="sr-only">{{ $gettext("Schließen") }}</span>
             </button>
         </div>
         <div class="sr-only" aria-live="polite" role="log">

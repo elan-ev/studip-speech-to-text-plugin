@@ -4,7 +4,7 @@
             <div class="box-centered">
                 <div class="icon-upload">
                     <slot name="icon">
-                        <StudipIcon shape="upload" :size="100" alt="" :role="dragging ? 'info_alt' : 'clickable' "/>
+                        <StudipIcon shape="upload" :size="100" alt="" :role="dragging ? 'info_alt' : 'clickable'" />
                     </slot>
                 </div>
                 <slot />
@@ -12,10 +12,15 @@
                     <slot name="quota"></slot>
                 </div>
                 <div class="upload-button-holder">
-                    <input type="file" name="file" tabindex="-1" accept="audio/*,video/*" ref="upload"
-                           @change="onUpload"
-                           @dragenter="setDragging(true)"
-                           @dragleave="setDragging(false)"
+                    <input
+                        type="file"
+                        name="file"
+                        tabindex="-1"
+                        accept="audio/*,video/*"
+                        ref="upload"
+                        @change="onUpload"
+                        @dragenter="setDragging(true)"
+                        @dragleave="setDragging(false)"
                     />
                 </div>
             </div>
@@ -24,11 +29,11 @@
 </template>
 
 <script>
-import StudipIcon from './base/StudipIcon.vue';
+import StudipIcon from "./base/StudipIcon.vue";
 
 export default {
-    components: { StudipIcon, },
-    emits: ['upload'],
+    components: { StudipIcon },
+    emits: ["upload"],
     data: () => ({
         dragging: false,
     }),
@@ -36,7 +41,7 @@ export default {
         onUpload() {
             const files = this.$refs.upload.files;
             const file = files[0];
-            this.$emit('upload', { file });
+            this.$emit("upload", { file });
         },
         setDragging(state) {
             this.dragging = state;
@@ -90,7 +95,7 @@ label {
     margin: 0 2em 14px;
 }
 
-.upload-button-holder input[type='file'] {
+.upload-button-holder input[type="file"] {
     position: absolute;
     top: 0;
     right: 0;

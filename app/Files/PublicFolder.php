@@ -2,7 +2,6 @@
 
 namespace SpeechToTextPlugin\Files;
 
-use FileType;
 use Folder;
 use FolderType;
 use Icon;
@@ -32,6 +31,11 @@ class PublicFolder extends StandardFolder
     public static function createTopFolder(Job $job): PublicFolder
     {
         return new PublicFolder(Folder::createTopFolder($job->id, $job::class, PublicFolder::class));
+    }
+
+    public static function deleteTopFolder(Job $job): void
+    {
+        Folder::deleteBySql('range_id = ? AND range_type = ?', [$job->id, $job::class]);
     }
 
     public function createSubfolder(FolderType $folderdata)

@@ -8,7 +8,6 @@ use SpeechToTextPlugin\Http\Controllers\JobsDelete;
 use SpeechToTextPlugin\Http\Controllers\JobsIndex;
 use SpeechToTextPlugin\Http\Controllers\JobsStore;
 use SpeechToTextPlugin\Http\Controllers\JobsWebhook;
-use SpeechToTextPlugin\Http\Middlewares\HandleInertiaRequests;
 use SpeechToTextPlugin\Http\Middlewares\HandleValidation;
 use SpeechToTextPlugin\Http\Middlewares\JsonBodyParser;
 use SpeechToTextPlugin\Http\Middlewares\RedirectNobody;
@@ -20,7 +19,8 @@ use StudIPPlugin;
 
 class Router
 {
-    public function __construct(private readonly StudIPPlugin $plugin) {
+    public function __construct(private readonly StudIPPlugin $plugin)
+    {
     }
 
     public function registerRoutes(RouteCollectorProxyInterface $app, string $unconsumedPath): void
@@ -30,7 +30,6 @@ class Router
             self::registerPublicRoutes($routes);
         })
             ->add(JsonBodyParser::class)
-            ->add(HandleInertiaRequests::class)
             ->add(NamedRoutes::class)
             ->add(HandleValidation::class)
             ->add(StoreCurrentUrl::class)

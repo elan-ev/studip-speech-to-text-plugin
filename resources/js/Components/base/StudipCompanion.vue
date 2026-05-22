@@ -6,9 +6,9 @@ defineProps({
     },
     mood: {
         type: String,
-        default: 'default',
+        default: "default",
         validator: (value) => {
-            return ['default', 'unsure', 'special', 'sad', 'pointing', 'curious'].includes(value);
+            return ["default", "unsure", "special", "sad", "pointing", "curious"].includes(value);
         },
     },
 });

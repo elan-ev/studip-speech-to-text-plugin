@@ -1,18 +1,30 @@
 <script setup>
 import { useRoute } from "@elan-ev/studip-named-routes";
-import { Head, router } from "@inertiajs/vue3";
+import { useQuery, useQueryClient } from "@tanstack/vue-query";
 import { computed, onMounted, onBeforeUnmount, ref } from "vue";
-import { format } from "../../Composables/use-file-size.js";
-import DialogDeleteJob from "../../Components/DialogDeleteJob.vue";
-import DialogNewJob from "../../Components/DialogNewJob.vue";
-import TranscriptionJob from "../../Components/TranscriptionJob.vue";
-import UploadBox from "../../Components/UploadBox.vue";
-import UploadIcon from "../../Components/UploadIcon.vue";
-import UploadQuota from "../../Components/UploadQuota.vue";
+import { format } from "@/Composables/use-file-size.js";
+import { useApi } from "@/Composables/use-api.js";
+import DialogDeleteJob from "@/Components/DialogDeleteJob.vue";
+import DialogNewJob from "@/Components/DialogNewJob.vue";
+import TranscriptionJob from "@/Components/TranscriptionJob.vue";
+import UploadBox from "@/Components/UploadBox.vue";
+import UploadIcon from "@/Components/UploadIcon.vue";
+import UploadQuota from "@/Components/UploadQuota.vue";
 
 const route = useRoute();
+const { fetchJobs, deleteJob } = useApi();
 
-const props = defineProps({ jobs: Array, usage: Number, MAX_UPLOAD: Number, QUOTA: Number });
+const queryClient = useQueryClient();
+const { isPending, isFetching, isError, isSuccess, data, error } = useQuery({
+  queryKey: ["jobs"],
+  queryFn: async () => {
+    const { data } = await fetchJobs();
+
+    return data;
+  },
+});
+
+const props = defineProps({ usage: Number, MAX_UPLOAD: Number, QUOTA: Number });
 
 const newJobStatus = ref(null);
 const showNewJobDialog = ref(false);
@@ -20,11 +32,11 @@ const showRemoveJobDialog = ref(false);
 const selectedJob = ref(null);
 const uploadFile = ref(null);
 
-const latest = computed(() => _.maxBy(props.jobs, (job) => new Date(job.chdate)));
-const sortedJobs = computed(() => _.sortBy(props.jobs, ["mkdate"]).reverse());
+const latest = computed(() => _.maxBy(data.value, (job) => new Date(job.chdate)));
+const sortedJobs = computed(() => _.sortBy(data.value, ["mkdate"]).reverse());
 
 const onReceive = () => {
-  router.reload({ only: ["jobs"] });
+  queryClient.invalidateQueries({ queryKey: ["jobs"] });
 };
 const onSend = () => ({ since: latest.value?.chdate ?? null });
 onMounted(() => STUDIP.JSUpdater.register("SpeechToTextPlugin", onReceive, onSend));
@@ -41,7 +53,9 @@ const onTrashJob = () => {
   showRemoveJobDialog.value = false;
   selectedJob.value = null;
 
-  router.delete(route("jobs.delete", { id }));
+  deleteJob(id).then(() => {
+    queryClient.invalidateQueries({ queryKey: ["jobs"] });
+  });
 };
 
 const onUpload = ({ file }) => {
@@ -52,8 +66,6 @@ const onUpload = ({ file }) => {
 </script>
 
 <template>
-  <Head :title="'pages.welcome.title'" />
-
   <UploadBox @upload="onUpload">
     <template #icon>
       <UploadIcon style="height: 100px; width: 100px" :heartbeat="newJobStatus === 'upload'" />
@@ -64,43 +76,43 @@ const onUpload = ({ file }) => {
     </template>
 
     <template v-if="!['upload', 'success'].includes(newJobStatus)">
-      <strong>{{ $gettext("Audio-Datei auswählen oder per Drag & Drop hierher ziehen") }}</strong>
+      <strong>{{ "Audio-Datei auswählen oder per Drag & Drop hierher ziehen" }}</strong>
       <p style="margin-block-start: 1em">
-        {{ $gettext("Maximale Dateigröße für Uploads:") }}
+        {{ "Maximale Dateigröße für Uploads:" }}
         {{ format(MAX_UPLOAD) }}
       </p>
     </template>
 
     <template v-if="newJobStatus === 'upload'">
       <p style="margin-block: 1em; font-weight: bold">
-        {{ $gettext("Datei wird hochgeladen …") }}
+        {{ "Datei wird hochgeladen …" }}
       </p>
     </template>
 
     <template v-if="newJobStatus === 'success'">
       <p style="margin-block-start: 1em; font-weight: bold">
-        {{ $gettext("Ihre Datei wurde erfolgreich hochgeladen. Die Audio-Transkription erfolgt in Kürze.") }}
+        {{ "Ihre Datei wurde erfolgreich hochgeladen. Die Audio-Transkription erfolgt in Kürze." }}
       </p>
       <p style="margin-block-end: 1.5em; font-weight: bold">
-        {{ $gettext("Das Transkript erhalten Sie automatisch per E-Mail.") }}
+        {{ "Das Transkript erhalten Sie automatisch per E-Mail." }}
       </p>
     </template>
   </UploadBox>
 
-  <div class="speech-to-text-table-wrapper">
-    <table class="default sortable-table" data-sortlist="[[3,1]]" v-if="sortedJobs.length">
+  <div v-if="isSuccess" class="speech-to-text-table-wrapper">
+    <table class="default sortable-table" data-sortlist="[[3,1]]" v-if="sortedJobs?.length">
       <thead>
         <tr class="sortable">
-          <th data-sort="text">{{ $gettext("Audiodatei") }}</th>
-          <th data-sort="digit">{{ $gettext("Dateigröße") }}</th>
-          <th>{{ $gettext("Transkription") }}</th>
-          <th data-sort="text">{{ $gettext("Erstellt am") }}</th>
+          <th data-sort="text">{{ "Audiodatei" }}</th>
+          <th data-sort="digit">{{ "Dateigröße" }}</th>
+          <th>{{ "Transkription" }}</th>
+          <th data-sort="text">{{ "Erstellt am" }}</th>
           <th class="actions">
-            <span class="sr-only">{{ $gettext("Aktionen") }}</span>
+            <span class="sr-only">{{ "Aktionen" }}</span>
           </th>
         </tr>
       </thead>
-      <tbody>
+      <tbody v-if="!isPending">
         <TranscriptionJob v-for="job in sortedJobs" :job="job" :key="job.id" @trash="onConfirmTrashJob" />
       </tbody>
     </table>

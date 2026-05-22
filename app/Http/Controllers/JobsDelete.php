@@ -6,15 +6,12 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Exception\HttpUnauthorizedException;
 use SpeechToTextPlugin\Models\Job;
-use SpeechToTextPlugin\Traits\Authorizing;
 
 /**
  * @SuppressWarnings(StaticAccess)
  */
-class JobsDelete extends JobsController
+class JobsDelete extends Controller
 {
-    use Authorizing;
-
     /**
      * @SuppressWarnings(UnusedFormalParameter)
      */
@@ -28,6 +25,6 @@ class JobsDelete extends JobsController
 
         $job->delete();
 
-        return $this->redirectToNamedRoute('jobs.index');
+        return $this->accepted();
     }
 }

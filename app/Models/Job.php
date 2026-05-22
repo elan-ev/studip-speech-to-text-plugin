@@ -22,6 +22,8 @@ use SpeechToTextPlugin\Traits\LogsErrors;
  * @property mixed $input_file_ref
  * @property mixed $input_file_ref_name
  * @property mixed $input_file_ref_size
+ * @property mixed $diarize
+ * @property mixed $language
  * @property mixed $prediction
  * @property mixed $status
  * @property mixed $mkdate.
@@ -56,7 +58,14 @@ class Job extends \SimpleORMap
             'on_delete' => 'delete',
         ];
 
+        $config['registered_callbacks']['before_delete'] = ['cbBeforeDelete'];
+
         parent::configure($config);
+    }
+
+    public function cbBeforeDelete()
+    {
+        PublicFolder::deleteTopFolder($this);
     }
 
     /**

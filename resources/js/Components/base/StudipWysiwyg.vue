@@ -1,27 +1,27 @@
 <script setup>
-import { inject, ref, watch } from 'vue';
+import { inject, ref, watch } from "vue";
 
-const ClassicEditor = inject('ClassicEditor');
+const ClassicEditor = inject("ClassicEditor");
 
 const toolbar = {
     items: [
-        'bold',
-        'italic',
-        'underline',
-        'strikethrough',
-        'subscript',
-        'superscript',
-        'fontColor',
-        'fontBackgroundColor',
-        '|',
-        'removeFormat',
-        '|',
-        'bulletedList',
-        'numberedList',
-        '|',
-        'insertTable',
-        'codeBlock',
-        'math',
+        "bold",
+        "italic",
+        "underline",
+        "strikethrough",
+        "subscript",
+        "superscript",
+        "fontColor",
+        "fontBackgroundColor",
+        "|",
+        "removeFormat",
+        "|",
+        "bulletedList",
+        "numberedList",
+        "|",
+        "insertTable",
+        "codeBlock",
+        "math",
     ],
     shouldNotGroupWhenFull: false,
 };
@@ -32,7 +32,7 @@ const props = defineProps({
         required: true,
     },
 });
-const emit = defineEmits(['update:modelValue']);
+const emit = defineEmits(["update:modelValue"]);
 
 const currentText = ref(props.modelValue);
 const editor = ref(ClassicEditor);
@@ -42,7 +42,7 @@ const prefill = () => (currentText.value = props.modelValue);
 
 const onInput = (value) => {
     currentText.value = value;
-    emit('update:modelValue', value);
+    emit("update:modelValue", value);
 };
 
 watch(

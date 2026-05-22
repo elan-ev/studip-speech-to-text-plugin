@@ -53,14 +53,12 @@ class ReplicatePredictionService implements PredictionServiceInterface
      *
      * @param Job          $job        The job entity containing input file reference and metadata
      * @param UriInterface $webhookUri The base URI for webhook callbacks
-     * @param string       $language   The code of the language, 'de' by default
-     * @param bool         $diarize    Should the transcription be diarized, false by default
      *
      * @throws InputValidationException  When job input validation fails
      * @throws ApiCommunicationException When communication with Replicate API fails
      * @throws FileOperationException    When file operations fail
      */
-    public function startPrediction(Job $job, UriInterface $webhookUri, string $language = 'de', bool $diarize = false): void
+    public function startPrediction(Job $job, UriInterface $webhookUri): void
     {
         $timer = self::trackTime('start_prediction.timer');
         $this->logInfo('Started prediction for job %d', $job->id);
@@ -69,7 +67,7 @@ class ReplicatePredictionService implements PredictionServiceInterface
             $this->validateJobInput($job);
             $audioUrl = $this->getAudioUrl($job);
             $webhook = (string) $this->getWebhookUri($job, $webhookUri);
-            $prediction = $this->createPrediction($audioUrl, $webhook, $language, $diarize);
+            $prediction = $this->createPrediction($audioUrl, $webhook, $job->language, $job->diarize);
 
             $job->prediction = json_encode($prediction->json(), self::JSON_OPTIONS);
             $job->status = 'started';
