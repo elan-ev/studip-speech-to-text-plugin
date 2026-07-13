@@ -115,7 +115,15 @@ watch(
 
           <div class="formpart">
             <label class="studiprequired">
-              <input v-model="form.diarize" type="checkbox" name="diarize" required aria-required="true" />
+              <input
+                v-model="form.diarize"
+                type="checkbox"
+                name="diarize"
+                required
+                aria-required="true"
+                :true-value="1"
+                :false-value="0"
+              />
               <span class="textlabel">
                 {{ "Identifizierung der Sprechenden" }}
               </span>
